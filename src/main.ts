@@ -4,6 +4,7 @@ config();
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import * as path from 'path';
+import * as fs from 'fs';
 
 let mainWindow: BrowserWindow | null = null;
 let pythonProcess: ChildProcessWithoutNullStreams | null = null;
@@ -48,12 +49,33 @@ app.on('window-all-closed', () => {
   }
 });
 
+function getPythonPath(): string {
+  const isDev = !app.isPackaged;
+
+  if (isDev) {
+    const bundledPython = path.join(process.cwd(), 'resources', 'python', 'bin', 'python3');
+    if (fs.existsSync(bundledPython)) {
+      return bundledPython;
+    }
+  } else {
+    const bundledPython = path.join(process.resourcesPath, 'python', 'bin', 'python3');
+    if (fs.existsSync(bundledPython)) {
+      return bundledPython;
+    }
+  }
+
+  return 'python3';
+}
+
 ipcMain.handle('start-python', () => {
   if (pythonProcess) {
     return { success: false, message: 'Python is already running' };
   }
 
-  pythonProcess = spawn('python3', ['-i', '-u'], {
+  const pythonPath = getPythonPath();
+  console.log('Using Python:', pythonPath);
+
+  pythonProcess = spawn(pythonPath, ['-i', '-u'], {
     stdio: ['pipe', 'pipe', 'pipe']
   });
 

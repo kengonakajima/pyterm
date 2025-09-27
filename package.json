@@ -6,7 +6,10 @@
   "scripts": {
     "build": "tsc",
     "start": "npm run build && electron .",
-    "dev": "tsc && electron ."
+    "dev": "tsc && electron .",
+    "setup-python": "bash scripts/download-python.sh",
+    "install-packages": "bash scripts/install-packages.sh",
+    "postinstall": "npm run setup-python && npm run install-packages"
   },
   "keywords": [
     "electron",
