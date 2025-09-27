@@ -205,6 +205,36 @@ terminalInput.addEventListener('keydown', async (e) => {
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
+  const apiKeyModal = document.getElementById('api-key-modal') as HTMLDivElement;
+  const apiKeyInput = document.getElementById('api-key-input') as HTMLInputElement;
+  const saveApiKeyButton = document.getElementById('save-api-key-button') as HTMLButtonElement;
+
+  const apiKeyResult = await window.electronAPI.getApiKey();
+  if (!apiKeyResult.apiKey) {
+    apiKeyModal.style.display = 'flex';
+  }
+
+  saveApiKeyButton.addEventListener('click', async () => {
+    const key = apiKeyInput.value.trim();
+    if (key) {
+      await window.electronAPI.setApiKey(key);
+      apiKeyModal.style.display = 'none';
+      apiKeyInput.value = '';
+    }
+  });
+
+  apiKeyInput.addEventListener('keydown', async (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const key = apiKeyInput.value.trim();
+      if (key) {
+        await window.electronAPI.setApiKey(key);
+        apiKeyModal.style.display = 'none';
+        apiKeyInput.value = '';
+      }
+    }
+  });
+
   const result = await window.electronAPI.startPython();
   if (!result.success) {
     appendToTerminal(`Failed to start Python: ${result.message}`, 'error');

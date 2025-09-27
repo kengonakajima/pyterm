@@ -5,9 +5,33 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { spawn, ChildProcessWithoutNullStreams } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as keytar from 'keytar';
 
 let mainWindow: BrowserWindow | null = null;
 let pythonProcess: ChildProcessWithoutNullStreams | null = null;
+let apiKey: string | null = null;
+
+const SERVICE_NAME = 'Term';
+const ACCOUNT_NAME = 'xai-api-key';
+
+async function loadApiKey(): Promise<string | null> {
+  try {
+    const key = await keytar.getPassword(SERVICE_NAME, ACCOUNT_NAME);
+    return key;
+  } catch (error) {
+    console.error('Failed to load API key from keychain:', error);
+  }
+  return null;
+}
+
+async function saveApiKey(key: string): Promise<void> {
+  try {
+    await keytar.setPassword(SERVICE_NAME, ACCOUNT_NAME, key);
+    apiKey = key;
+  } catch (error) {
+    console.error('Failed to save API key to keychain:', error);
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -30,7 +54,8 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  apiKey = await loadApiKey();
   createWindow();
 
   app.on('activate', () => {
@@ -105,9 +130,8 @@ ipcMain.handle('send-to-python', (_event, command: string) => {
 });
 
 ipcMain.handle('analyze-error', async (_event, history: string) => {
-  const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) {
-    return { success: false, message: 'XAI_API_KEY not set' };
+    return { success: false, message: 'API key not configured' };
   }
 
   const OpenAI = require('openai').default;
@@ -138,9 +162,8 @@ ipcMain.handle('analyze-error', async (_event, history: string) => {
 });
 
 ipcMain.handle('ask-ai', async (_event, question: string, history: string, conversationHistory: Array<{role: string, content: string}>) => {
-  const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) {
-    return { success: false, message: 'XAI_API_KEY not set' };
+    return { success: false, message: 'API key not configured' };
   }
 
   const OpenAI = require('openai').default;
@@ -175,4 +198,13 @@ ipcMain.handle('ask-ai', async (_event, question: string, history: string, conve
     success: true,
     answer: response.choices[0].message.content
   };
+});
+
+ipcMain.handle('get-api-key', () => {
+  return { success: true, apiKey };
+});
+
+ipcMain.handle('set-api-key', async (_event, key: string) => {
+  await saveApiKey(key);
+  return { success: true };
 });

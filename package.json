@@ -9,7 +9,9 @@
     "dev": "tsc && electron .",
     "setup-python": "bash scripts/download-python.sh",
     "install-packages": "bash scripts/install-packages.sh",
-    "postinstall": "npm run setup-python && npm run install-packages"
+    "postinstall": "npm run setup-python && npm run install-packages",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder"
   },
   "keywords": [
     "electron",
@@ -22,10 +24,39 @@
   "devDependencies": {
     "@types/node": "^20.10.0",
     "electron": "^28.0.0",
+    "electron-builder": "^26.0.12",
     "typescript": "^5.3.0"
   },
   "dependencies": {
     "dotenv": "^17.2.2",
+    "keytar": "^7.9.0",
     "openai": "^4.20.0"
+  },
+  "build": {
+    "appId": "com.term.python",
+    "productName": "Term",
+    "files": [
+      "dist/**/*",
+      "index.html",
+      "resources/python/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "target": [
+        "dir"
+      ],
+      "category": "public.app-category.developer-tools",
+      "icon": "build/icon.icns",
+      "identity": null
+    },
+    "extraResources": [
+      {
+        "from": "resources/python",
+        "to": "python"
+      }
+    ]
   }
 }

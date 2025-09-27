@@ -5,6 +5,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendToPython: (command: string) => ipcRenderer.invoke('send-to-python', command),
   analyzeError: (history: string) => ipcRenderer.invoke('analyze-error', history),
   askAI: (question: string, history: string, conversationHistory: Array<{role: string, content: string}>) => ipcRenderer.invoke('ask-ai', question, history, conversationHistory),
+  getApiKey: () => ipcRenderer.invoke('get-api-key'),
+  setApiKey: (key: string) => ipcRenderer.invoke('set-api-key', key),
   onPythonOutput: (callback: (data: string) => void) => {
     ipcRenderer.on('python-output', (_event, data) => callback(data));
   },

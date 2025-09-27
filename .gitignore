@@ -6,3 +6,4 @@ dist/
 .claude
 .build
 resources/python/
+release
