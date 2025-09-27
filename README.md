@@ -1,2 +1,11 @@
 # term
-Experimental terminal app for AI
+
+- Pythonのターミナルアプリ。IDLE、あるいはProcessingみたいなもの
+- 起動すると画面は1個で、pythonのインタプリタが起動してプロンプトを表示する。
+- pythonコードを入力してEnterすると評価され実行される、通常のpython3の動き。
+- ElectronとTypeScriptベースの描画システム
+- 画面の状態を常にAIが監視する。
+- エラーが出ていたら、その原因を解析して、説明と修正方法の提示をするが、実際に修正はしない。
+
+
+

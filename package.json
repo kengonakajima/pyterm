@@ -1,0 +1,28 @@
+{
+  "name": "term",
+  "version": "1.0.0",
+  "description": "Python terminal with AI error analysis",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && electron .",
+    "dev": "tsc && electron ."
+  },
+  "keywords": [
+    "electron",
+    "python",
+    "terminal",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "electron": "^28.0.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "openai": "^4.20.0"
+  }
+}
