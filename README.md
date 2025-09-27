@@ -2,6 +2,8 @@
 
 Python学習・実験用のインタラクティブターミナルアプリケーション。
 
+![Screenshot](screenshot.png)
+
 ## 特徴
 
 - **内蔵Python環境**: Python 3.13.6 + numpyを同梱、システムへのインストール不要
