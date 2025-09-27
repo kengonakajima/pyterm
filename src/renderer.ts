@@ -42,21 +42,47 @@ function checkForError(text: string) {
 async function analyzeCurrentError() {
   const recentHistory = commandHistory.slice(-50).join('\n');
 
-  analysisContent.innerHTML = '<div style="color: #888;">解析中...</div>';
+  const loadingDiv = document.createElement('div');
+  loadingDiv.style.color = '#888';
+  loadingDiv.style.marginBottom = '16px';
+  loadingDiv.textContent = 'エラー解析中...';
+  analysisContent.appendChild(loadingDiv);
+  analysisContent.scrollTop = analysisContent.scrollHeight;
 
   const result = await window.electronAPI.analyzeError(recentHistory);
 
+  analysisContent.removeChild(loadingDiv);
+
   if (result.success && result.analysis) {
-    analysisContent.innerHTML = '';
+    const msgDiv = document.createElement('div');
+    msgDiv.style.marginBottom = '16px';
+    msgDiv.style.paddingBottom = '16px';
+    msgDiv.style.borderBottom = '1px solid #333';
+
+    const titleDiv = document.createElement('div');
+    titleDiv.style.color = '#ff6b6b';
+    titleDiv.style.fontWeight = 'bold';
+    titleDiv.style.marginBottom = '8px';
+    titleDiv.textContent = 'エラー解析:';
+    msgDiv.appendChild(titleDiv);
+
     const lines = result.analysis.split('\n');
     lines.forEach((line: string) => {
       const div = document.createElement('div');
       div.textContent = line;
-      div.style.marginBottom = '8px';
-      analysisContent.appendChild(div);
+      div.style.marginBottom = '4px';
+      msgDiv.appendChild(div);
     });
+
+    analysisContent.appendChild(msgDiv);
+    analysisContent.scrollTop = analysisContent.scrollHeight;
   } else {
-    analysisContent.innerHTML = `<div style="color: #ff4444;">エラー解析に失敗しました: ${result.message}</div>`;
+    const errorDiv = document.createElement('div');
+    errorDiv.style.color = '#ff4444';
+    errorDiv.style.marginBottom = '16px';
+    errorDiv.textContent = `エラー解析に失敗しました: ${result.message}`;
+    analysisContent.appendChild(errorDiv);
+    analysisContent.scrollTop = analysisContent.scrollHeight;
   }
 }
 
@@ -248,43 +274,57 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (!question) return;
 
-    analysisContent.innerHTML = '<div style="color: #888;">回答を生成中...</div>';
+    const questionDiv = document.createElement('div');
+    questionDiv.style.marginBottom = '16px';
+    questionDiv.style.paddingBottom = '16px';
+    questionDiv.style.borderBottom = '1px solid #333';
+
+    const questionTitle = document.createElement('div');
+    questionTitle.style.color = '#4ec9b0';
+    questionTitle.style.fontWeight = 'bold';
+    questionTitle.style.marginBottom = '8px';
+    questionTitle.textContent = `質問: ${question}`;
+    questionDiv.appendChild(questionTitle);
+    analysisContent.appendChild(questionDiv);
+
+    const loadingDiv = document.createElement('div');
+    loadingDiv.style.color = '#888';
+    loadingDiv.style.marginBottom = '16px';
+    loadingDiv.textContent = '回答を生成中...';
+    analysisContent.appendChild(loadingDiv);
+    analysisContent.scrollTop = analysisContent.scrollHeight;
 
     const recentHistory = commandHistory.slice(-50).join('\n');
     const result = await window.electronAPI.askAI(question, recentHistory, conversationHistory);
+
+    analysisContent.removeChild(loadingDiv);
 
     if (result.success && result.answer) {
       conversationHistory.push({ role: 'user', content: question });
       conversationHistory.push({ role: 'assistant', content: result.answer });
 
-      analysisContent.innerHTML = '';
-      conversationHistory.forEach((msg) => {
-        const msgDiv = document.createElement('div');
-        msgDiv.style.marginBottom = '16px';
+      const answerDiv = document.createElement('div');
+      answerDiv.style.marginBottom = '16px';
+      answerDiv.style.paddingBottom = '16px';
+      answerDiv.style.borderBottom = '1px solid #333';
 
-        if (msg.role === 'user') {
-          const questionDiv = document.createElement('div');
-          questionDiv.style.color = '#4ec9b0';
-          questionDiv.style.fontWeight = 'bold';
-          questionDiv.style.marginBottom = '8px';
-          questionDiv.textContent = `質問: ${msg.content}`;
-          msgDiv.appendChild(questionDiv);
-        } else {
-          const lines = msg.content.split('\n');
-          lines.forEach((line: string) => {
-            const div = document.createElement('div');
-            div.textContent = line;
-            div.style.marginBottom = '4px';
-            msgDiv.appendChild(div);
-          });
-        }
-
-        analysisContent.appendChild(msgDiv);
+      const lines = result.answer.split('\n');
+      lines.forEach((line: string) => {
+        const div = document.createElement('div');
+        div.textContent = line;
+        div.style.marginBottom = '4px';
+        answerDiv.appendChild(div);
       });
 
+      analysisContent.appendChild(answerDiv);
       analysisContent.scrollTop = analysisContent.scrollHeight;
     } else {
-      analysisContent.innerHTML = `<div style="color: #ff4444;">回答の生成に失敗しました: ${result.message}</div>`;
+      const errorDiv = document.createElement('div');
+      errorDiv.style.color = '#ff4444';
+      errorDiv.style.marginBottom = '16px';
+      errorDiv.textContent = `回答の生成に失敗しました: ${result.message}`;
+      analysisContent.appendChild(errorDiv);
+      analysisContent.scrollTop = analysisContent.scrollHeight;
     }
 
     analysisInput.value = '';

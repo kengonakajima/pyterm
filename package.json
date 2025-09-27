@@ -10,7 +10,9 @@
     "setup-python": "bash scripts/download-python.sh",
     "install-packages": "bash scripts/install-packages.sh",
     "postinstall": "npm run setup-python && npm run install-packages",
-    "pack": "npm run build && electron-builder --dir",
+    "pack": "npm run pack-unsigned",
+    "pack-unsigned": "CSC_IDENTITY_AUTO_DISCOVERY=false npm run build && electron-builder --dir",
+    "pack-signed": "npm run build && electron-builder --dir",
     "dist": "npm run build && electron-builder"
   },
   "keywords": [
@@ -49,8 +51,7 @@
         "dir"
       ],
       "category": "public.app-category.developer-tools",
-      "icon": "build/icon.icns",
-      "identity": null
+      "icon": "build/icon.icns"
     },
     "extraResources": [
       {

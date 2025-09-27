@@ -35,11 +35,16 @@ npm start
 ### リリースビルド
 
 ```bash
-# macOS用.appファイルの生成
+# macOS用.appファイルの生成（署名なし・高速）
 npm run pack
+
+# 署名付きビルド（配布用）
+npm run pack-signed
 
 # 生成されたアプリ: release/mac-arm64/PyTerm.app
 ```
+
+**注意**: `pack-signed`は開発用証明書で署名するため時間がかかります。開発中は`pack`を使用してください。
 
 ### 初回起動時
 
