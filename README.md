@@ -1,4 +1,4 @@
-# Term - AI対応Pythonターミナル
+# PyTerm - AI対応Pythonターミナル
 
 Python学習・実験用のインタラクティブターミナルアプリケーション。
 
@@ -38,7 +38,7 @@ npm start
 # macOS用.appファイルの生成
 npm run pack
 
-# 生成されたアプリ: release/mac-arm64/Term.app
+# 生成されたアプリ: release/mac-arm64/PyTerm.app
 ```
 
 ### 初回起動時
@@ -70,13 +70,13 @@ npm run pack
 - APIキーはmacOSキーチェーンに暗号化保存
 - `security`コマンドで確認可能:
   ```bash
-  security find-generic-password -s "Term" -a "xai-api-key"
+  security find-generic-password -s "PyTerm" -a "xai-api-key"
   ```
 
 ## プロジェクト構成
 
 ```
-term/
+pyterm/
 ├── src/
 │   ├── main.ts          # Electronメインプロセス
 │   ├── preload.ts       # プリロードスクリプト

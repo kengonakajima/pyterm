@@ -11,7 +11,7 @@ let mainWindow: BrowserWindow | null = null;
 let pythonProcess: ChildProcessWithoutNullStreams | null = null;
 let apiKey: string | null = null;
 
-const SERVICE_NAME = 'Term';
+const SERVICE_NAME = 'PyTerm';
 const ACCOUNT_NAME = 'xai-api-key';
 
 async function loadApiKey(): Promise<string | null> {

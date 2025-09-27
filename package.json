@@ -1,5 +1,5 @@
 {
-  "name": "term",
+  "name": "pyterm",
   "version": "1.0.0",
   "description": "Python terminal with AI error analysis",
   "main": "dist/main.js",
@@ -33,8 +33,8 @@
     "openai": "^4.20.0"
   },
   "build": {
-    "appId": "com.term.python",
-    "productName": "Term",
+    "appId": "com.pyterm.python",
+    "productName": "PyTerm",
     "files": [
       "dist/**/*",
       "index.html",
