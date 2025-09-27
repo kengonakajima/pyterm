@@ -114,3 +114,43 @@ ipcMain.handle('analyze-error', async (_event, history: string) => {
     analysis: response.choices[0].message.content
   };
 });
+
+ipcMain.handle('ask-ai', async (_event, question: string, history: string, conversationHistory: Array<{role: string, content: string}>) => {
+  const apiKey = process.env.XAI_API_KEY;
+  if (!apiKey) {
+    return { success: false, message: 'XAI_API_KEY not set' };
+  }
+
+  const OpenAI = require('openai').default;
+  const openai = new OpenAI({
+    apiKey,
+    baseURL: 'https://api.x.ai/v1'
+  });
+
+  const messages = [
+    {
+      role: 'system',
+      content: 'あなたはPythonプログラミングのアシスタントです。ユーザーの質問に日本語で簡潔に答えてください。'
+    },
+    {
+      role: 'system',
+      content: `以下はPythonの実行履歴です：\n\n${history}`
+    },
+    ...conversationHistory,
+    {
+      role: 'user',
+      content: question
+    }
+  ];
+
+  const response = await openai.chat.completions.create({
+    model: 'grok-code-fast-1',
+    messages,
+    temperature: 0.7
+  });
+
+  return {
+    success: true,
+    answer: response.choices[0].message.content
+  };
+});

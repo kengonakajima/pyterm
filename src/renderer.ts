@@ -7,6 +7,7 @@ let commandHistory: string[] = [];
 let multiLineBuffer: string[] = [];
 let isMultiLineMode = false;
 let currentIndent = 0;
+let conversationHistory: Array<{role: string, content: string}> = [];
 
 function appendToTerminal(text: string, className?: string) {
   const line = document.createElement('div');
@@ -42,7 +43,6 @@ async function analyzeCurrentError() {
   const recentHistory = commandHistory.slice(-50).join('\n');
 
   analysisContent.innerHTML = '<div style="color: #888;">解析中...</div>';
-  analysisPanel.style.display = 'block';
 
   const result = await window.electronAPI.analyzeError(recentHistory);
 
@@ -78,6 +78,78 @@ window.electronAPI.onPythonError((data: string) => {
 
 window.electronAPI.onPythonClosed((code: number) => {
   appendToTerminal(`\nPython process exited with code ${code}`, 'system');
+});
+
+terminalInput.addEventListener('paste', async (e) => {
+  e.preventDefault();
+  const pastedText = e.clipboardData?.getData('text') || '';
+
+  if (pastedText.includes('\n')) {
+    const lines = pastedText.split('\n');
+    const promptEl = document.getElementById('prompt') as HTMLSpanElement;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (i === 0 && terminalInput.value) {
+        const combinedLine = terminalInput.value + line;
+        appendToTerminal(`${promptEl.textContent} ${combinedLine}`, 'input');
+        await window.electronAPI.sendToPython(combinedLine);
+        terminalInput.value = '';
+
+        if (combinedLine.trim().endsWith(':')) {
+          isMultiLineMode = true;
+          multiLineBuffer.push(combinedLine);
+          promptEl.textContent = '...';
+          currentIndent = 4;
+        }
+      } else if (line.trim() !== '' || isMultiLineMode) {
+        if (isMultiLineMode) {
+          if (line.trim() === '') {
+            appendToTerminal('', 'input');
+            await window.electronAPI.sendToPython('');
+            const fullCommand = multiLineBuffer.join('\n');
+            commandHistory.push(fullCommand);
+            multiLineBuffer = [];
+            isMultiLineMode = false;
+            currentIndent = 0;
+            promptEl.textContent = '>>>';
+          } else {
+            appendToTerminal(`... ${line}`, 'input');
+            await window.electronAPI.sendToPython(line);
+            multiLineBuffer.push(line);
+
+            if (line.trim().endsWith(':')) {
+              const leadingSpaces = line.length - line.trimStart().length;
+              currentIndent = leadingSpaces + 4;
+            }
+          }
+        } else {
+          appendToTerminal(`>>> ${line}`, 'input');
+          await window.electronAPI.sendToPython(line);
+
+          if (line.trim().endsWith(':')) {
+            isMultiLineMode = true;
+            multiLineBuffer.push(line);
+            promptEl.textContent = '...';
+            currentIndent = 4;
+          } else {
+            commandHistory.push(`>>> ${line}`);
+          }
+        }
+      }
+    }
+
+    if (isMultiLineMode) {
+      terminalInput.value = ' '.repeat(currentIndent);
+    }
+  } else {
+    const start = terminalInput.selectionStart || 0;
+    const end = terminalInput.selectionEnd || 0;
+    const currentValue = terminalInput.value;
+    terminalInput.value = currentValue.substring(0, start) + pastedText + currentValue.substring(end);
+    terminalInput.selectionStart = terminalInput.selectionEnd = start + pastedText.length;
+  }
 });
 
 terminalInput.addEventListener('keydown', async (e) => {
@@ -137,4 +209,56 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!result.success) {
     appendToTerminal(`Failed to start Python: ${result.message}`, 'error');
   }
+
+  const analysisInput = document.getElementById('analysis-input') as HTMLInputElement;
+  const sendButton = document.getElementById('send-button') as HTMLButtonElement;
+
+  async function sendQuestion() {
+    const question = analysisInput.value.trim();
+
+    if (!question) return;
+
+    analysisContent.innerHTML = '<div style="color: #888;">回答を生成中...</div>';
+
+    const recentHistory = commandHistory.slice(-50).join('\n');
+    const result = await window.electronAPI.askAI(question, recentHistory, conversationHistory);
+
+    if (result.success && result.answer) {
+      conversationHistory.push({ role: 'user', content: question });
+      conversationHistory.push({ role: 'assistant', content: result.answer });
+
+      analysisContent.innerHTML = '';
+      conversationHistory.forEach((msg) => {
+        const msgDiv = document.createElement('div');
+        msgDiv.style.marginBottom = '16px';
+
+        if (msg.role === 'user') {
+          const questionDiv = document.createElement('div');
+          questionDiv.style.color = '#4ec9b0';
+          questionDiv.style.fontWeight = 'bold';
+          questionDiv.style.marginBottom = '8px';
+          questionDiv.textContent = `質問: ${msg.content}`;
+          msgDiv.appendChild(questionDiv);
+        } else {
+          const lines = msg.content.split('\n');
+          lines.forEach((line: string) => {
+            const div = document.createElement('div');
+            div.textContent = line;
+            div.style.marginBottom = '4px';
+            msgDiv.appendChild(div);
+          });
+        }
+
+        analysisContent.appendChild(msgDiv);
+      });
+
+      analysisContent.scrollTop = analysisContent.scrollHeight;
+    } else {
+      analysisContent.innerHTML = `<div style="color: #ff4444;">回答の生成に失敗しました: ${result.message}</div>`;
+    }
+
+    analysisInput.value = '';
+  }
+
+  sendButton.addEventListener('click', sendQuestion);
 });
